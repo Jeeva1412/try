@@ -3,7 +3,7 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches:
-      - main   # Change if your default branch is different
+      - master  # use 'main' if that's your default branch
 
 jobs:
   build-and-deploy:
@@ -31,13 +31,21 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git clone --branch gh-pages --depth 1 https://github.com/${{ github.repository }} gh-pages || git clone https://github.com/${{ github.repository }} gh-pages
-          cd gh-pages || (mkdir gh-pages && cd gh-pages && git init && git remote add origin https://github.com/${{ github.repository }} && git checkout -b gh-pages)
+          REPO="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}"
 
-          git rm -rf .
+          # Create a temp dir for gh-pages branch
+          mkdir gh-pages
+          cd gh-pages
+          git init
+          git remote add origin "$REPO"
 
+          # Create or switch to gh-pages branch
+          git checkout -b gh-pages
+
+          # Copy build files
           cp -r ../build/* .
 
-          git add --all
-          git commit -m "Deploy React app to GitHub Pages - ${{ github.sha }}" || echo "No changes to commit"
+          # Commit and push
+          git add .
+          git commit -m "Deploy React App to GitHub Pages - ${{ github.sha }}"
           git push origin gh-pages --force
